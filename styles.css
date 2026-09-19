@@ -1,0 +1,188 @@
+/* Pelume: one page. A tall track scrolls past a stage that stays put. */
+
+:root {
+  color-scheme: light;
+
+  --paper: #fff;
+  --ink: #000;
+  --dim: rgba(0, 0, 0, 0.13);
+
+  --sans: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  --pad: clamp(32px, 4vw, 56px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: clamp(16px, 0.25vw + 15.2px, 17.5px);
+  font-weight: 400;
+  line-height: 1.7;
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Shell: one scrolling region filling the window ---------- */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ---------- Plain layout (no scripting, or reduced motion) ---------- */
+
+.hero {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: clamp(24px, 6vh, 64px);
+  padding: clamp(32px, 8vh, 96px) var(--pad);
+}
+
+.mark {
+  position: relative;
+  width: clamp(160px, 26vw, 330px);
+  aspect-ratio: 1;
+  display: block;
+}
+
+.mark img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.statement {
+  max-width: 27em;
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.15rem, 0.8rem + 1vw, 1.6rem);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* ---------- Scene ----------
+   stage.js adds .is-scene. The canvas paints the pixelated paperclips and the
+   statement sits over it. Words start dim and come up to full ink on scroll. */
+
+.is-scene .scroll {
+  scrollbar-width: none;
+}
+
+.is-scene .scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.is-scene .track {
+  position: relative;
+}
+
+.is-scene .stage {
+  position: sticky;
+  top: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.is-scene .hero {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  padding: 0;
+  display: block;
+}
+
+/* The <img> stays in the page for its alt text; the canvas draws the mark. */
+.is-scene .mark {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  pointer-events: none;
+}
+
+.stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.is-scene .statement {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(calc(100% - 2 * var(--pad)), 27em);
+  transform: translate(-50%, -50%);
+  font-size: clamp(1.3rem, 0.8rem + 1.5vw, 2.15rem);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.word {
+  color: var(--dim);
+}
+
+/* ---------- Phone: the window scrolls instead of the inner region ---------- */
+
+@media (max-width: 720px) {
+  .shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .scroll {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .hero {
+    flex: 1;
+  }
+
+  .is-scene .stage {
+    height: 100svh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .word {
+    color: var(--ink);
+  }
+}
