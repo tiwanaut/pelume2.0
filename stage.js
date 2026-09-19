@@ -30,7 +30,7 @@
     delay: 350, // ms of plain white before it starts
     screens: 4, // track length, in stage heights
     markSize: 0.78, // paperclips, as a fraction of the shorter stage side
-    coarse: 10, // coarsest block is the longer stage side divided by this
+    coarse: 24, // coarsest block is the longer stage side divided by this
     sway: 0.045, // paperclip rotation drift, radians
     source: 1800, // px the SVG is rasterised at, once
 
@@ -41,7 +41,8 @@
     hide: [0.7, 0.78], // statement fades out
     back: [0.78, 0.98], // paperclips resolve again
     dim: 0.13, // starting ink of each word
-    band: 6 // words that are part way up at any moment
+    band: 10, // words that are part way up at any moment
+    glide: 0.15 // seconds the scroll position takes to catch up (0 = no easing)
   };
 
   var phone = window.matchMedia("(max-width: 720px)");
@@ -80,7 +81,10 @@
   var maxBlock = 100;
 
   var words = [];
-  var progress = 0;
+  var target = 0; // progress straight from the scroll position
+  var progress = 0; // eased towards target, drives everything on screen
+  var primed = false;
+  var last = 0;
   var scrollD = 0; // 0 sharp, 1 fully pixelated, from scroll alone
   var textShown = 0;
   var scrolled = true;
@@ -99,7 +103,8 @@
       shell.classList.add("is-live");
       layout(true);
       bind();
-      t0 = performance.now() + CFG.delay;
+      last = performance.now();
+      t0 = last + CFG.delay;
       requestAnimationFrame(loop);
     },
     function () {
@@ -263,8 +268,17 @@
     var top = phone.matches ? 0 : scroller.getBoundingClientRect().top;
     var travel = track.offsetHeight - stage.offsetHeight;
     var gone = top - track.getBoundingClientRect().top;
-    progress = travel > 0 ? clamp(gone / travel, 0, 1) : 0;
+    target = travel > 0 ? clamp(gone / travel, 0, 1) : 0;
 
+    /* First reading, or no easing: land on it without gliding from the top. */
+    if (!primed || CFG.glide <= 0) {
+      primed = true;
+      progress = target;
+      apply();
+    }
+  }
+
+  function apply() {
     var away = ease(range(progress, CFG.away[0], CFG.away[1]));
     var back = ease(range(progress, CFG.back[0], CFG.back[1]));
     scrollD = away * (1 - back);
@@ -302,7 +316,7 @@
     var reach =
       range(progress, CFG.read[0], CFG.read[1]) * (words.length + CFG.band);
     for (var i = 0; i < words.length; i++) {
-      var t = clamp((reach - i) / CFG.band, 0, 1);
+      var t = ease(clamp((reach - i) / CFG.band, 0, 1));
       words[i].style.color =
         "rgba(0,0,0," + (CFG.dim + (1 - CFG.dim) * t).toFixed(3) + ")";
     }
@@ -314,6 +328,19 @@
     if (scrolled) {
       scrolled = false;
       measure();
+    }
+
+    /* Wheel notches arrive in steps. Easing the position toward the scroll
+       target turns each step into a short glide. */
+    var dt = Math.min(Math.max((now - last) / 1000, 0), 0.05);
+    last = now;
+    if (progress !== target) {
+      var gap = target - progress;
+      progress =
+        Math.abs(gap) < 0.0002
+          ? target
+          : progress + gap * (1 - Math.exp(-dt / CFG.glide));
+      apply();
     }
 
     var k = clamp((now - t0) / CFG.intro, 0, 1);
