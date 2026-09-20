@@ -1,7 +1,6 @@
-/* Pelume home: a white field of large pixels that slowly resolves into the
-   paperclips, first as a grey silhouette, then lit red. Scrolling breaks them
-   back into pixels, brings up the statement word by word, then resolves the
-   paperclips again. The scroll loops, so there is no end in either direction.
+/* Pelume home: a white field of large pixels that resolves into the paperclips.
+   Scrolling breaks the paperclips back into pixels, brings up the statement
+   word by word, then resolves the paperclips again.
 
    Progressive enhancement. Without scripting, or with reduced motion, the page
    is the paperclip mark with the statement underneath it. */
@@ -27,17 +26,12 @@
   /* ------------------------------------------------------------ settings */
 
   var CFG = {
-    intro: 4600, // ms for the first resolve from pixels to paperclips
-    delay: 500, // ms of plain white before it starts
-    screens: 4, // one pass of the sequence, in stage heights
-    loop: true, // keep scrolling round instead of stopping at the end
-    passes: 5, // passes held in the scroll track when looping
-    markSize: 0.66, // paperclips, as a fraction of the shorter stage side
+    intro: 3400, // ms for the first resolve from pixels to paperclips
+    delay: 350, // ms of plain white before it starts
+    screens: 4, // track length, in stage heights
+    markSize: 0.78, // paperclips, as a fraction of the shorter stage side
     coarse: 24, // coarsest block is the longer stage side divided by this
-    grain: 22, // how dark the grey grain gets, out of 255
-    stealth: 0.85, // colour held back until the end: 0 none, 1 fully grey
     sway: 0.045, // paperclip rotation drift, radians
-    drift: 0.012, // how far they wander, as a fraction of the shorter stage side
     source: 1800, // px the SVG is rasterised at, once
 
     /* Scroll phases, each as [start, end] over 0..1 of the track. */
@@ -67,11 +61,6 @@
     return t * t * (3 - 2 * t);
   }
 
-  /* A gentler ease for the opening: slow to start and slow to settle. */
-  function soft(t) {
-    return t * t * t * (t * (t * 6 - 15) + 10);
-  }
-
   /* --------------------------------------------------------------- state */
 
   var canvas = document.createElement("canvas");
@@ -92,15 +81,10 @@
   var maxBlock = 100;
 
   var words = [];
-  var cycle = 1; // px of scrolling in one pass of the sequence
-  var passes = 1;
-  var target = 0; // passes scrolled, straight from the scroll position
+  var target = 0; // progress straight from the scroll position
   var progress = 0; // eased towards target, drives everything on screen
   var primed = false;
   var last = 0;
-  var lastScroll = 0;
-  var settle = false;
-  var reach = 0; // how far the words have come up, 0..1
   var scrollD = 0; // 0 sharp, 1 fully pixelated, from scroll alone
   var textShown = 0;
   var scrolled = true;
@@ -110,11 +94,6 @@
 
   shell.classList.add("is-scene");
   splitWords(text);
-
-  /* A reload should start at the paperclips, not wherever the browser left it. */
-  if (CFG.loop && "scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-  }
 
   loadMark(
     function (source) {
@@ -208,15 +187,15 @@
     }
   }
 
-  /* Light grey noise, one pixel per grain, so the white field reads as pixels
-     before any paperclip has formed. */
+  /* Light grey noise, one pixel per block while the image is coarse, so the
+     white field reads as pixels before any paperclip has come through. */
   function makeGrain() {
     var g = document.createElement("canvas");
     g.width = g.height = 128;
     var x = g.getContext("2d");
     var id = x.createImageData(128, 128);
     for (var i = 0; i < id.data.length; i += 4) {
-      var v = 255 - Math.floor(Math.pow(Math.random(), 1.5) * CFG.grain);
+      var v = 255 - Math.floor(Math.pow(Math.random(), 1.5) * 22);
       id.data[i] = id.data[i + 1] = id.data[i + 2] = v;
       id.data[i + 3] = 255;
     }
@@ -233,19 +212,14 @@
       container,
       h,
       stage.clientWidth,
+      window.innerHeight,
       window.devicePixelRatio
     ].join("|");
     if (!force && key === sizeKey) return;
     sizeKey = key;
 
     stage.style.height = container ? h + "px" : "";
-    var sh = stage.offsetHeight;
-
-    var next = Math.max(1, Math.round(sh * (CFG.screens - 1)));
-    var resized = next !== cycle || !primed;
-    cycle = next;
-    passes = CFG.loop ? CFG.passes : 1;
-    track.style.height = Math.round(sh + cycle * passes) + "px";
+    track.style.height = Math.round(stage.offsetHeight * CFG.screens) + "px";
 
     W = stage.clientWidth;
     H = stage.clientHeight;
@@ -257,16 +231,6 @@
 
     markPx = Math.min(W, H) * CFG.markSize * dpr;
     maxBlock = Math.max(24, Math.round(Math.max(W, H) / CFG.coarse));
-
-    /* The pass length changed, so put the scroll back at the same point in the
-       sequence. Looping starts in the middle pass with room either way. */
-    if (resized) {
-      var mid = CFG.loop ? Math.floor(passes / 2) : 0;
-      var at = 0;
-      if (primed) at = CFG.loop ? progress - Math.floor(progress) : clamp(progress, 0, 1);
-      setScroll((mid + at) * cycle);
-      target = progress = mid + at;
-    }
 
     lastSig = "";
     scrolled = true;
@@ -291,8 +255,6 @@
 
     var flag = function () {
       scrolled = true;
-      settle = true;
-      lastScroll = performance.now();
     };
     window.addEventListener("scroll", flag, { passive: true });
     scroller.addEventListener("scroll", flag, { passive: true });
@@ -300,27 +262,13 @@
 
   /* ----------------------------------------------------------- scroll state */
 
-  /* Two scroll models: the inner container on desktop, the window on phones.
-     Both read as px scrolled into the track. */
-  function scrollPos() {
-    var top = phone.matches ? 0 : scroller.getBoundingClientRect().top;
-    return top - track.getBoundingClientRect().top;
-  }
-
-  function setScroll(px) {
-    if (phone.matches) {
-      window.scrollTo(
-        0,
-        track.getBoundingClientRect().top + window.pageYOffset + px
-      );
-    } else {
-      scroller.scrollTop = px;
-    }
-  }
-
+  /* Two scroll models, as on the letter pages: the inner container on desktop,
+     the window on phones. */
   function measure() {
-    var u = scrollPos() / cycle;
-    target = CFG.loop ? u : clamp(u, 0, 1);
+    var top = phone.matches ? 0 : scroller.getBoundingClientRect().top;
+    var travel = track.offsetHeight - stage.offsetHeight;
+    var gone = top - track.getBoundingClientRect().top;
+    target = travel > 0 ? clamp(gone / travel, 0, 1) : 0;
 
     /* First reading, or no easing: land on it without gliding from the top. */
     if (!primed || CFG.glide <= 0) {
@@ -330,37 +278,15 @@
     }
   }
 
-  /* Looping: the first and last frame of a pass are the same picture, so the
-     scroll position can be moved by whole passes without anything changing on
-     screen. That keeps the reader in the middle of a long track. It happens at
-     once near either end, and otherwise once scrolling has paused, because
-     moving the scroll mid-flick can cut short momentum on some phones. */
-  function recentre(paused) {
-    if (!CFG.loop) return;
-    var u = scrollPos() / cycle;
-    var mid = Math.floor(passes / 2);
-    var edge = u < 0.5 || u > passes - 0.5;
-    if (!edge && !(paused && Math.floor(u) !== mid)) return;
-
-    var k = Math.floor(u) - mid;
-    if (!k) return;
-    setScroll((u - k) * cycle);
-    target -= k;
-    progress -= k;
-  }
-
   function apply() {
-    var p = CFG.loop ? progress - Math.floor(progress) : clamp(progress, 0, 1);
-
-    var away = ease(range(p, CFG.away[0], CFG.away[1]));
-    var back = ease(range(p, CFG.back[0], CFG.back[1]));
+    var away = ease(range(progress, CFG.away[0], CFG.away[1]));
+    var back = ease(range(progress, CFG.back[0], CFG.back[1]));
     scrollD = away * (1 - back);
 
     textShown =
-      ease(range(p, CFG.show[0], CFG.show[1])) *
-      (1 - ease(range(p, CFG.hide[0], CFG.hide[1])));
+      ease(range(progress, CFG.show[0], CFG.show[1])) *
+      (1 - ease(range(progress, CFG.hide[0], CFG.hide[1])));
 
-    reach = range(p, CFG.read[0], CFG.read[1]);
     paintText();
   }
 
@@ -387,9 +313,10 @@
   function paintText() {
     text.style.opacity = textShown.toFixed(3);
 
-    var lit = reach * (words.length + CFG.band);
+    var reach =
+      range(progress, CFG.read[0], CFG.read[1]) * (words.length + CFG.band);
     for (var i = 0; i < words.length; i++) {
-      var t = ease(clamp((lit - i) / CFG.band, 0, 1));
+      var t = ease(clamp((reach - i) / CFG.band, 0, 1));
       words[i].style.color =
         "rgba(0,0,0," + (CFG.dim + (1 - CFG.dim) * t).toFixed(3) + ")";
     }
@@ -401,10 +328,6 @@
     if (scrolled) {
       scrolled = false;
       measure();
-      recentre(false);
-    } else if (settle && now - lastScroll > 160) {
-      settle = false;
-      recentre(true);
     }
 
     /* Wheel notches arrive in steps. Easing the position toward the scroll
@@ -421,73 +344,46 @@
     }
 
     var k = clamp((now - t0) / CFG.intro, 0, 1);
-    var d = Math.max(1 - soft(k), scrollD);
+    var d = Math.max(1 - ease(k), scrollD);
     render(now / 1000, d);
 
     requestAnimationFrame(loop);
   }
 
-  /* d runs from 0 (sharp paperclips) to 1 (coarse white pixels). The block size
-     changes continuously: two neighbouring sizes are drawn and blended, so the
-     pixels never jump from one size to the next. */
-  var view = { alpha: 1, sat: 1, grain: 0, angle: 0, dx: 0, dy: 0, side: 0 };
-
+  /* d runs from 0 (sharp paperclips) to 1 (coarse white pixels). */
   function render(t, d) {
-    var bf = Math.pow(maxBlock * dpr, d); // block size in device px
-    var low = Math.max(1, Math.floor(bf));
-    var mix = bf - low;
-
-    view.alpha = 1 - ease(range(d, 0.1, 0.92));
-    view.sat = 1 - CFG.stealth * ease(range(d, 0, 0.4));
-    view.grain = clamp((bf / dpr - 3) / 24, 0, 1) * (1 - textShown);
+    var alpha = 1 - ease(range(d, 0.1, 0.92));
+    var block = Math.max(1, Math.round(Math.pow(maxBlock, d)));
+    var B = Math.max(1, Math.round(block * dpr));
+    var grainAmt = clamp((block - 3) / 24, 0, 1) * (1 - textShown);
 
     /* Nothing is moving once the paperclips are gone. */
-    var sig =
-      view.alpha < 0.003
-        ? low + "|" + mix.toFixed(2) + "|" + view.grain.toFixed(3)
-        : "";
+    var sig = alpha < 0.003 ? B + "|" + grainAmt.toFixed(3) : "";
     if (sig && sig === lastSig) return;
     lastSig = sig;
 
-    /* The paperclips are never still: a slow rock, a slow wander, a slow breath. */
-    var reach = Math.min(Wd, Hd);
-    view.angle =
-      Math.sin(t * 0.21) * CFG.sway + Math.sin(t * 0.09 + 1.3) * CFG.sway * 0.5;
-    view.dx = Math.sin(t * 0.17) * CFG.drift * reach;
-    view.dy =
-      Math.cos(t * 0.23) * CFG.drift * reach + Math.sin(t * 0.33) * H * 0.004 * dpr;
-    view.side = markPx * (1 + 0.1 * d) * (1 + Math.sin(t * 0.37) * 0.008);
+    var angle = Math.sin(t * 0.21) * CFG.sway;
+    var lift = Math.sin(t * 0.33) * H * 0.006 * dpr;
+    var side = markPx * (1 + 0.1 * d) * (1 + Math.sin(t * 0.37) * 0.008);
 
-    paint(low, 1);
-    if (mix > 0.02) paint(low + 1, mix);
-  }
-
-  /* Draw one block size over the whole canvas at the given opacity. */
-  function paint(B, a) {
-    var dx = Wd / 2 + view.dx;
-    var dy = Hd / 2 + view.dy;
-
-    /* Single pixels: draw straight to the screen at full resolution. */
     if (B === 1) {
-      ctx.globalAlpha = 1;
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, Wd, Hd);
-      if (view.alpha > 0.003) {
-        ctx.globalAlpha = view.alpha;
+      if (alpha > 0.003) {
+        ctx.globalAlpha = alpha;
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.save();
-        ctx.translate(dx, dy);
-        ctx.rotate(view.angle);
-        ctx.drawImage(mips[0].c, -view.side / 2, -view.side / 2, view.side, view.side);
+        ctx.translate(Wd / 2, Hd / 2 + lift);
+        ctx.rotate(angle);
+        ctx.drawImage(mips[0].c, -side / 2, -side / 2, side, side);
         ctx.restore();
         ctx.globalAlpha = 1;
       }
-      tone(ctx, Wd, Hd);
       return;
     }
 
-    /* Otherwise draw at one pixel per block, then scale up without smoothing. */
+    /* Draw at one pixel per block, then scale up without smoothing. */
     var lw = Math.ceil(Wd / B);
     var lh = Math.ceil(Hd / B);
     if (lo.width !== lw || lo.height !== lh) {
@@ -500,27 +396,25 @@
     lctx.fillStyle = "#fff";
     lctx.fillRect(0, 0, lw, lh);
 
-    if (view.alpha > 0.003) {
-      var s = view.side / B;
+    if (alpha > 0.003) {
+      var s = side / B;
       var m = 0;
       while (m + 1 < mips.length && mips[m + 1].s >= s) m++;
 
       lctx.imageSmoothingEnabled = true;
       lctx.imageSmoothingQuality = "high";
-      lctx.globalAlpha = view.alpha;
+      lctx.globalAlpha = alpha;
       lctx.save();
-      lctx.translate(dx / B, dy / B);
-      lctx.rotate(view.angle);
+      lctx.translate(Wd / 2 / B, (Hd / 2 + lift) / B);
+      lctx.rotate(angle);
       lctx.drawImage(mips[m].c, -s / 2, -s / 2, s, s);
       lctx.restore();
       lctx.globalAlpha = 1;
     }
 
-    tone(lctx, lw, lh);
-
-    if (view.grain > 0.003) {
+    if (grainAmt > 0.003) {
       lctx.globalCompositeOperation = "multiply";
-      lctx.globalAlpha = view.grain;
+      lctx.globalAlpha = grainAmt;
       lctx.fillStyle = grain;
       lctx.fillRect(0, 0, lw, lh);
       lctx.globalCompositeOperation = "source-over";
@@ -528,20 +422,6 @@
     }
 
     ctx.imageSmoothingEnabled = false;
-    ctx.globalAlpha = a;
     ctx.drawImage(lo, 0, 0, lw * B, lh * B);
-    ctx.globalAlpha = 1;
-  }
-
-  /* Hold the colour back. A grey layer in "saturation" mode leaves brightness
-     alone and pulls the colour toward grey; white is not touched. */
-  function tone(c, w, h) {
-    if (view.sat > 0.995) return;
-    c.globalCompositeOperation = "saturation";
-    c.globalAlpha = 1 - view.sat;
-    c.fillStyle = "#808080";
-    c.fillRect(0, 0, w, h);
-    c.globalCompositeOperation = "source-over";
-    c.globalAlpha = 1;
   }
 })();
