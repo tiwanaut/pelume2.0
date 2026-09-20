@@ -1,11 +1,10 @@
 /* Pelume home: a white mosaic of square tiles. Red tiles grow out of it along
    the shape of the paperclips, like pieces being placed in a game, while a few
-   tiles blink at random. Scrolling drains the red back out, brings up the
-   statement word by word over the same mosaic, then grows the paperclips again.
-   The scroll loops, so there is no end in either direction.
+   tiles blink at random. Scrolling drains the red back out, then grows the
+   paperclips again. The scroll loops, so there is no end in either direction.
 
    Progressive enhancement. Without scripting, or with reduced motion, the page
-   is the paperclip mark with the statement underneath it. */
+   is the paperclip mark. */
 
 (function () {
   "use strict";
@@ -22,7 +21,6 @@
   var track = shell.querySelector("[data-track]");
   var stage = shell.querySelector("[data-stage]");
   var img = shell.querySelector("[data-mark] img");
-  var text = shell.querySelector("[data-statement]");
   if (!scroller || !track || !stage || !img) return;
 
   /* ------------------------------------------------------------ settings */
@@ -30,25 +28,21 @@
   var CFG = {
     intro: 5600, // ms for the paperclips to grow the first time
     delay: 600, // ms of empty mosaic before anything grows
-    screens: 4, // one pass of the sequence, in stage heights
+    screens: 3, // one pass of the sequence, in stage heights
     loop: true, // keep scrolling round instead of stopping at the end
     passes: 5, // passes held in the scroll track when looping
     markSize: 0.66, // paperclips, as a fraction of the shorter stage side
     across: 56, // tiles across the paperclips: higher is finer
     minTile: 6, // smallest tile, in px
     gap: 0.14, // gap between tiles, as a share of a tile
+    line: "#f0f0f0", // colour of the gaps; the tiles themselves are white
     spark: 0.03, // share of tiles that blink now and then
     seeds: 5, // places along the paperclips where growth starts
     source: 1800, // px the SVG is rasterised at, once
 
     /* Scroll phases, each as [start, end] over 0..1 of one pass. */
-    away: [0.02, 0.26], // red drains out of the paperclips
-    show: [0.24, 0.32], // statement fades in
-    read: [0.3, 0.62], // words come up from dim to full ink
-    hide: [0.7, 0.78], // statement fades out
-    back: [0.78, 0.98], // paperclips grow again
-    dim: 0.13, // starting ink of each word
-    band: 10, // words that are part way up at any moment
+    away: [0.04, 0.42], // red drains out of the paperclips
+    back: [0.58, 0.96], // paperclips grow again
     glide: 0.15 // seconds the scroll position takes to catch up (0 = no easing)
   };
 
@@ -114,7 +108,6 @@
   var imgData = null;
   var buf = null; // what is drawn: base plus blinking tiles
   var base = null; // tiles without the blinking
-  var tone = null; // grey of each empty tile
   var onMark = null; // 1 where a tile belongs to the paperclips
   var ink = null; // colour a tile takes when the paperclips reach it
   var born = null; // when, in growth 0..1, the paperclips reach a tile
@@ -122,9 +115,7 @@
   var sIdx = null; // tiles that blink
   var sT = null;
   var sP = null;
-  var sK = null;
 
-  var words = [];
   var cycle = 1; // px of scrolling in one pass of the sequence
   var passes = 1;
   var target = 0; // passes scrolled, straight from the scroll position
@@ -133,9 +124,7 @@
   var last = 0;
   var lastScroll = 0;
   var settle = false;
-  var reach = 0; // how far the words have come up, 0..1
   var scrollD = 0; // 0 fully grown, 1 fully drained, from scroll alone
-  var textShown = 0;
   var scrolled = true;
   var t0 = 0;
   var lastForm = -1;
@@ -145,7 +134,6 @@
   var sizeKey = "";
 
   shell.classList.add("is-scene");
-  splitWords(text);
 
   /* A reload should start at the paperclips, not wherever the browser left it. */
   if (CFG.loop && "scrollRestoration" in history) {
@@ -174,10 +162,6 @@
     shell.classList.remove("is-scene", "is-live");
     stage.style.height = "";
     track.style.height = "";
-    words.forEach(function (w) {
-      w.style.color = "#000";
-    });
-    text.style.opacity = "";
   }
 
   /* ---------------------------------------------------------- the paperclips */
@@ -346,20 +330,12 @@
     imgData = lctx.createImageData(cols, rows);
     buf = new Uint32Array(imgData.data.buffer);
     base = new Uint32Array(n);
-    tone = new Uint8Array(n);
     onMark = new Uint8Array(n);
     ink = new Uint32Array(n);
     born = new Float32Array(n);
     wob = new Float32Array(n);
 
-    /* Empty tiles: mostly near white, a few a touch greyer. */
-    for (var i = 0; i < n; i++) {
-      tone[i] =
-        rnd(i, 1) < 0.14
-          ? 234 + Math.floor(rnd(i, 2) * 8)
-          : 243 + Math.floor(rnd(i, 3) * 12);
-      wob[i] = rnd(i, 4) * 6.2832;
-    }
+    for (var i = 0; i < n; i++) wob[i] = rnd(i, 4) * 6.2832;
 
     if (!sampleMark(n)) return false;
     growth(n);
@@ -481,28 +457,26 @@
     }
   }
 
-  /* Tiles that blink at random, each on its own slow cycle. */
+  /* Tiles that light up red at random, each on its own slow cycle. */
   function blinkers(n) {
     var list = [];
     for (var i = 0; i < n; i++) if (rnd(i, 8) < CFG.spark) list.push(i);
     sIdx = new Int32Array(list);
     sT = new Float32Array(list.length);
     sP = new Float32Array(list.length);
-    sK = new Uint8Array(list.length);
     for (var k = 0; k < list.length; k++) {
       sT[k] = 2.5 + rnd(list[k], 11) * 5;
       sP[k] = rnd(list[k], 12);
-      sK[k] = rnd(list[k], 13) < 0.22 ? 1 : 0; // a few go dark instead of red
     }
   }
 
-  /* White lines between the tiles, drawn once. */
+  /* The lines between the tiles, drawn once. */
   function drawGrout() {
     grout.width = Wd;
     grout.height = Hd;
     var g = grout.getContext("2d");
     var w = Math.max(1, Math.round(P * CFG.gap));
-    g.fillStyle = "#fff";
+    g.fillStyle = CFG.line;
     for (var c = 1; c <= cols; c++) g.fillRect(c * P - w, 0, w, Hd);
     for (var r = 1; r <= rows; r++) g.fillRect(0, r * P - w, Wd, w);
   }
@@ -564,44 +538,6 @@
     var away = ease(range(p, CFG.away[0], CFG.away[1]));
     var back = ease(range(p, CFG.back[0], CFG.back[1]));
     scrollD = away * (1 - back);
-
-    textShown =
-      ease(range(p, CFG.show[0], CFG.show[1])) *
-      (1 - ease(range(p, CFG.hide[0], CFG.hide[1])));
-
-    reach = range(p, CFG.read[0], CFG.read[1]);
-    paintText();
-  }
-
-  /* --------------------------------------------------------------- statement */
-
-  function splitWords(p) {
-    var frag = document.createDocumentFragment();
-    p.textContent.split(/(\s+)/).forEach(function (token) {
-      if (!token) return;
-      if (/^\s+$/.test(token)) {
-        frag.appendChild(document.createTextNode(token));
-        return;
-      }
-      var span = document.createElement("span");
-      span.className = "word";
-      span.textContent = token;
-      frag.appendChild(span);
-      words.push(span);
-    });
-    p.textContent = "";
-    p.appendChild(frag);
-  }
-
-  function paintText() {
-    text.style.opacity = textShown.toFixed(3);
-
-    var lit = reach * (words.length + CFG.band);
-    for (var i = 0; i < words.length; i++) {
-      var t = ease(clamp((lit - i) / CFG.band, 0, 1));
-      words[i].style.color =
-        "rgba(0,0,0," + (CFG.dim + (1 - CFG.dim) * t).toFixed(3) + ")";
-    }
   }
 
   /* ---------------------------------------------------------------- drawing */
@@ -670,8 +606,8 @@
     var wa = growing ? WOBBLE : 0;
 
     for (var i = 0; i < n; i++) {
-      var tw = tone[i];
-      var c = tw | (tw << 8) | (tw << 16) | 0xff000000;
+      var tw = 255;
+      var c = 0xffffffff;
 
       if (onMark[i]) {
         var thr = born[i];
@@ -695,10 +631,10 @@
     }
   }
 
-  /* A few tiles light up and fade on their own slow cycles. Most are red, some
-     go dark. Once the paperclips are grown their own tiles glint. */
+  /* A few tiles light up red and fade on their own slow cycles. Once the
+     paperclips are grown their own tiles glint. */
   function blink(form, t) {
-    var lively = (0.55 + 0.45 * 4 * form * (1 - form)) * (1 - 0.45 * textShown);
+    var lively = 0.55 + 0.45 * 4 * form * (1 - form);
 
     for (var k = 0; k < sIdx.length; k++) {
       var u = (t / sT[k] + sP[k]) % 1;
@@ -718,11 +654,6 @@
         tg = 190;
         tb = 178;
         st = 0.55 * env;
-      } else if (sK[k]) {
-        tr = 70;
-        tg = 70;
-        tb = 76;
-        st = 0.38 * env * lively;
       } else {
         tr = 232;
         tg = 58;
