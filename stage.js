@@ -33,8 +33,8 @@
     loop: true, // keep scrolling round instead of stopping at the end
     passes: 5, // passes held in the scroll track when looping
     markSize: 0.66, // paperclips, as a fraction of the shorter stage side
-    pixel: 5, // px per grain while the paperclips form
-    grain: 28, // how dark the grey grain gets, out of 255
+    pixel: 8, // px per grain while the paperclips form
+    grain: 12, // how dark the grey grain gets, out of 255
     sway: 0.045, // paperclip rotation drift, radians
     source: 1800, // px the SVG is rasterised at, once
 
