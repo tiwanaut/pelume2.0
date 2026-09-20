@@ -1,7 +1,7 @@
-/* Pelume home: a white field of fine grain in which the paperclips form pixel
-   by pixel, then sharpen. Scrolling breaks them back into pixels, brings up the
-   statement word by word, then forms the paperclips again. The scroll loops, so
-   there is no end to reach in either direction.
+/* Pelume home: a white field of large pixels that slowly resolves into the
+   paperclips, first as a grey silhouette, then lit red. Scrolling breaks them
+   back into pixels, brings up the statement word by word, then resolves the
+   paperclips again. The scroll loops, so there is no end in either direction.
 
    Progressive enhancement. Without scripting, or with reduced motion, the page
    is the paperclip mark with the statement underneath it. */
@@ -27,15 +27,17 @@
   /* ------------------------------------------------------------ settings */
 
   var CFG = {
-    intro: 3800, // ms for the first resolve from grain to paperclips
-    delay: 350, // ms of plain white before it starts
+    intro: 4600, // ms for the first resolve from pixels to paperclips
+    delay: 500, // ms of plain white before it starts
     screens: 4, // one pass of the sequence, in stage heights
     loop: true, // keep scrolling round instead of stopping at the end
     passes: 5, // passes held in the scroll track when looping
     markSize: 0.66, // paperclips, as a fraction of the shorter stage side
-    pixel: 8, // px per grain while the paperclips form
-    grain: 12, // how dark the grey grain gets, out of 255
+    coarse: 24, // coarsest block is the longer stage side divided by this
+    grain: 22, // how dark the grey grain gets, out of 255
+    stealth: 0.85, // colour held back until the end: 0 none, 1 fully grey
     sway: 0.045, // paperclip rotation drift, radians
+    drift: 0.012, // how far they wander, as a fraction of the shorter stage side
     source: 1800, // px the SVG is rasterised at, once
 
     /* Scroll phases, each as [start, end] over 0..1 of the track. */
@@ -65,17 +67,10 @@
     return t * t * (3 - 2 * t);
   }
 
-  /* Repeatable random number for a cell, so the pixels come and go in the same
-     order every time and stay put when the window is resized. */
-  function hash(x, y) {
-    var h = Math.imul(x, 374761393) + Math.imul(y, 668265263);
-    h = Math.imul(h ^ (h >>> 13), 1274126177);
-    h ^= h >>> 16;
-    return (h >>> 0) / 4294967296;
+  /* A gentler ease for the opening: slow to start and slow to settle. */
+  function soft(t) {
+    return t * t * t * (t * (t * 6 - 15) + 10);
   }
-
-  var SHARP = 0.25; // share of the dissolve spent sharpening the mosaic
-  var SOFT = 0.12; // how long each pixel takes to come up, in fill
 
   /* --------------------------------------------------------------- state */
 
@@ -85,12 +80,6 @@
 
   var lo = document.createElement("canvas");
   var lctx = lo.getContext("2d");
-  var mask = document.createElement("canvas");
-  var mctx = mask.getContext("2d");
-  var maskData = null;
-  var rank = null; // per-cell random order for the grain
-  var rankW = 0;
-  var rankH = 0;
   var grain = null; // fillStyle pattern
   var mips = []; // paperclips at 1, 1/2, 1/4 ... scale, for clean downsampling
 
@@ -267,6 +256,7 @@
     canvas.height = Hd;
 
     markPx = Math.min(W, H) * CFG.markSize * dpr;
+    maxBlock = Math.max(24, Math.round(Math.max(W, H) / CFG.coarse));
 
     /* The pass length changed, so put the scroll back at the same point in the
        sequence. Looping starts in the middle pass with room either way. */
@@ -431,46 +421,73 @@
     }
 
     var k = clamp((now - t0) / CFG.intro, 0, 1);
-    var d = Math.max(1 - ease(k), scrollD);
+    var d = Math.max(1 - soft(k), scrollD);
     render(now / 1000, d);
 
     requestAnimationFrame(loop);
   }
 
-  /* d runs from 0 (sharp paperclips) to 1 (no paperclips, only grain).
-     From 1 down to SHARP the paperclips fill in one grain at a time, in a
-     random order. From SHARP down to 0 the grains shrink to single pixels. */
-  function render(t, d) {
-    var sharpen = d < SHARP;
-    var grainPx = Math.max(1, Math.round(CFG.pixel * dpr));
-    var B = sharpen ? Math.max(1, Math.round(Math.pow(grainPx, d / SHARP))) : grainPx;
-    var fill = sharpen ? 1 : 1 - range(d, SHARP, 1);
-    var grainAmt = ease(range(d, 0, 0.5)) * (1 - textShown);
+  /* d runs from 0 (sharp paperclips) to 1 (coarse white pixels). The block size
+     changes continuously: two neighbouring sizes are drawn and blended, so the
+     pixels never jump from one size to the next. */
+  var view = { alpha: 1, sat: 1, grain: 0, angle: 0, dx: 0, dy: 0, side: 0 };
 
-    /* Once no paperclip pixels are showing, nothing moves. */
-    var sig = fill < 0.003 ? B + "|" + grainAmt.toFixed(3) : "";
+  function render(t, d) {
+    var bf = Math.pow(maxBlock * dpr, d); // block size in device px
+    var low = Math.max(1, Math.floor(bf));
+    var mix = bf - low;
+
+    view.alpha = 1 - ease(range(d, 0.1, 0.92));
+    view.sat = 1 - CFG.stealth * ease(range(d, 0, 0.4));
+    view.grain = clamp((bf / dpr - 3) / 24, 0, 1) * (1 - textShown);
+
+    /* Nothing is moving once the paperclips are gone. */
+    var sig =
+      view.alpha < 0.003
+        ? low + "|" + mix.toFixed(2) + "|" + view.grain.toFixed(3)
+        : "";
     if (sig && sig === lastSig) return;
     lastSig = sig;
 
-    var angle = Math.sin(t * 0.21) * CFG.sway;
-    var lift = Math.sin(t * 0.33) * H * 0.006 * dpr;
-    var side = markPx * (1 + 0.1 * d) * (1 + Math.sin(t * 0.37) * 0.008);
+    /* The paperclips are never still: a slow rock, a slow wander, a slow breath. */
+    var reach = Math.min(Wd, Hd);
+    view.angle =
+      Math.sin(t * 0.21) * CFG.sway + Math.sin(t * 0.09 + 1.3) * CFG.sway * 0.5;
+    view.dx = Math.sin(t * 0.17) * CFG.drift * reach;
+    view.dy =
+      Math.cos(t * 0.23) * CFG.drift * reach + Math.sin(t * 0.33) * H * 0.004 * dpr;
+    view.side = markPx * (1 + 0.1 * d) * (1 + Math.sin(t * 0.37) * 0.008);
 
-    /* Fully sharp: draw straight to the screen at device resolution. */
+    paint(low, 1);
+    if (mix > 0.02) paint(low + 1, mix);
+  }
+
+  /* Draw one block size over the whole canvas at the given opacity. */
+  function paint(B, a) {
+    var dx = Wd / 2 + view.dx;
+    var dy = Hd / 2 + view.dy;
+
+    /* Single pixels: draw straight to the screen at full resolution. */
     if (B === 1) {
+      ctx.globalAlpha = 1;
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, Wd, Hd);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.save();
-      ctx.translate(Wd / 2, Hd / 2 + lift);
-      ctx.rotate(angle);
-      ctx.drawImage(mips[0].c, -side / 2, -side / 2, side, side);
-      ctx.restore();
+      if (view.alpha > 0.003) {
+        ctx.globalAlpha = view.alpha;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.save();
+        ctx.translate(dx, dy);
+        ctx.rotate(view.angle);
+        ctx.drawImage(mips[0].c, -view.side / 2, -view.side / 2, view.side, view.side);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+      tone(ctx, Wd, Hd);
       return;
     }
 
-    /* Otherwise draw at one pixel per grain, then scale up without smoothing. */
+    /* Otherwise draw at one pixel per block, then scale up without smoothing. */
     var lw = Math.ceil(Wd / B);
     var lh = Math.ceil(Hd / B);
     if (lo.width !== lw || lo.height !== lh) {
@@ -483,26 +500,27 @@
     lctx.fillStyle = "#fff";
     lctx.fillRect(0, 0, lw, lh);
 
-    if (fill > 0.003) {
-      var s = side / B;
+    if (view.alpha > 0.003) {
+      var s = view.side / B;
       var m = 0;
       while (m + 1 < mips.length && mips[m + 1].s >= s) m++;
 
       lctx.imageSmoothingEnabled = true;
       lctx.imageSmoothingQuality = "high";
+      lctx.globalAlpha = view.alpha;
       lctx.save();
-      lctx.translate(Wd / 2 / B, (Hd / 2 + lift) / B);
-      lctx.rotate(angle);
+      lctx.translate(dx / B, dy / B);
+      lctx.rotate(view.angle);
       lctx.drawImage(mips[m].c, -s / 2, -s / 2, s, s);
       lctx.restore();
-
-      /* Cover the grains that have not come up yet. */
-      if (fill < 0.997) hide(lw, lh, fill);
+      lctx.globalAlpha = 1;
     }
 
-    if (grainAmt > 0.003) {
+    tone(lctx, lw, lh);
+
+    if (view.grain > 0.003) {
       lctx.globalCompositeOperation = "multiply";
-      lctx.globalAlpha = grainAmt;
+      lctx.globalAlpha = view.grain;
       lctx.fillStyle = grain;
       lctx.fillRect(0, 0, lw, lh);
       lctx.globalCompositeOperation = "source-over";
@@ -510,36 +528,20 @@
     }
 
     ctx.imageSmoothingEnabled = false;
+    ctx.globalAlpha = a;
     ctx.drawImage(lo, 0, 0, lw * B, lh * B);
+    ctx.globalAlpha = 1;
   }
 
-  /* Paint white over every grain whose turn has not come. Each grain has its own
-     fixed number; a grain shows once fill passes it, easing in over SOFT. */
-  function hide(lw, lh, fill) {
-    var n = lw * lh;
-
-    if (!rank || rankW !== lw || rankH !== lh) {
-      rank = new Float32Array(n);
-      for (var y = 0; y < lh; y++) {
-        for (var x = 0; x < lw; x++) rank[y * lw + x] = hash(x, y);
-      }
-      rankW = lw;
-      rankH = lh;
-      mask.width = lw;
-      mask.height = lh;
-      maskData = mctx.createImageData(lw, lh);
-      for (var j = 0; j < n * 4; j += 4) {
-        maskData.data[j] = maskData.data[j + 1] = maskData.data[j + 2] = 255;
-      }
-    }
-
-    var px = maskData.data;
-    var top = fill * (1 + SOFT);
-    for (var i = 0; i < n; i++) {
-      var a = (top - rank[i]) / SOFT;
-      px[i * 4 + 3] = a <= 0 ? 255 : a >= 1 ? 0 : 255 - a * 255;
-    }
-    mctx.putImageData(maskData, 0, 0);
-    lctx.drawImage(mask, 0, 0);
+  /* Hold the colour back. A grey layer in "saturation" mode leaves brightness
+     alone and pulls the colour toward grey; white is not touched. */
+  function tone(c, w, h) {
+    if (view.sat > 0.995) return;
+    c.globalCompositeOperation = "saturation";
+    c.globalAlpha = 1 - view.sat;
+    c.fillStyle = "#808080";
+    c.fillRect(0, 0, w, h);
+    c.globalCompositeOperation = "source-over";
+    c.globalAlpha = 1;
   }
 })();
