@@ -1,5 +1,4 @@
-/* Pelume: a tall track scrolls past a stage that stays put, then releases
-   into a plain page carrying the mission statement. */
+/* Pelume: one page. A tall track scrolls past a stage that stays put. */
 
 @font-face {
   font-family: "ID Grotesk";
@@ -36,7 +35,7 @@
 :root {
   color-scheme: light;
 
-  --paper: #fff;
+  --paper: #ffffff;
   --ink: #000;
   --dim: rgba(0, 0, 0, 0.13);
 
@@ -111,18 +110,31 @@ body {
 }
 
 .statement {
-  max-width: 27em;
+  max-width: 34em;
   margin: 0;
   text-align: center;
-  font-size: clamp(1.15rem, 0.8rem + 1vw, 1.6rem);
-  line-height: 1.35;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
+  font-size: clamp(1.05rem, 0.8rem + 0.7vw, 1.35rem);
+  font-weight: 350;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+
+.statement a {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--dim);
+  text-underline-offset: 0.15em;
+}
+
+.statement a:hover {
+  text-decoration-color: currentColor;
 }
 
 /* ---------- Scene ----------
-   stage.js adds .is-scene. The canvas paints the pixelated paperclips and the
-   statement sits over it. Words start dim and come up to full ink on scroll. */
+   stage.js adds .is-scene. The canvas paints the pixelated paperclips; the
+   statement sits over it, centred, and fades in as the paperclips drain out
+   on scroll, then fades out again as they grow back. */
 
 .is-scene .scroll {
   scrollbar-width: none;
@@ -173,78 +185,33 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(calc(100% - 2 * var(--pad)), 27em);
+  width: min(calc(100% - 2 * var(--pad)), 34em);
   transform: translate(-50%, -50%);
-  font-size: clamp(1.3rem, 0.8rem + 1.5vw, 2.15rem);
+  font-size: clamp(1.15rem, 0.85rem + 1vw, 1.7rem);
   opacity: 0;
   pointer-events: none;
 }
 
-.word {
-  color: var(--dim);
+.is-scene .statement a {
+  pointer-events: auto;
 }
 
-/* ---------- About: the plain page the track releases into on scroll ---------- */
-
-.about {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: var(--paper);
-  padding: clamp(48px, 12vh, 140px) var(--pad);
-}
-
-.about-copy {
-  max-width: 34em;
-  font-weight: 350;
-  font-size: clamp(1.05rem, 0.85rem + 0.6vw, 1.3rem);
-  line-height: 1.6;
-  letter-spacing: -0.008em;
-}
-
-.about-copy p {
-  margin: 0 0 1.3em;
-}
-
-.about-copy p:last-child {
-  margin-bottom: 0;
-}
-
-.about-copy a {
-  color: inherit;
-  font-weight: 500;
-  text-decoration: underline;
-  text-decoration-color: var(--dim);
-  text-underline-offset: 0.15em;
-}
-
-.about-copy a:hover {
-  text-decoration-color: currentColor;
-}
-
-.about-mark {
-  display: flex;
-  justify-content: center;
-  margin-top: clamp(56px, 10vh, 120px);
-  opacity: 0.45;
-}
-
-.about-mark img {
-  display: block;
-  width: 30px;
-  height: 30px;
-}
+/* ---------- Legal: a small fixed line, always visible, never scrolls ---------- */
 
 .legal {
-  padding: 0 var(--pad) clamp(32px, 6vh, 56px);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: clamp(14px, 3vh, 22px) var(--pad);
   text-align: center;
 }
 
 .legal p {
   margin: 0;
   font-size: 0.8rem;
-  color: rgba(0, 0, 0, 0.4);
+  color: var(--ink);
 }
 
 /* ---------- Phone: the window scrolls instead of the inner region ---------- */
@@ -276,9 +243,5 @@ body {
   * {
     transition: none !important;
     animation: none !important;
-  }
-
-  .word {
-    color: var(--ink);
   }
 }
