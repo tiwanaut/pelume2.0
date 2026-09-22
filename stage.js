@@ -1,7 +1,7 @@
-/* Pelume home: a white mosaic of square tiles. Red tiles grow out of it along
-   the shape of the paperclips, like pieces being placed in a game, while a few
-   tiles blink at random. Scrolling drains the red back out, then grows the
-   paperclips again. The scroll loops, so there is no end in either direction.
+/* Pelume home: red tiles grow into the shape of the paperclips, like pieces
+   being placed in a game, on a plain white stage; a few of the mark's own
+   tiles blink once it is fully grown. Scrolling drains the red back out, then
+   grows it again, then releases the sticky stage into the plain page below.
 
    Progressive enhancement. Without scripting, or with reduced motion, the page
    is the paperclip mark. */
@@ -29,14 +29,14 @@
     intro: 5600, // ms for the paperclips to grow the first time
     delay: 600, // ms of empty mosaic before anything grows
     screens: 3, // one pass of the sequence, in stage heights
-    loop: true, // keep scrolling round instead of stopping at the end
+    loop: false, // run the sequence once, then release into the page below
     passes: 5, // passes held in the scroll track when looping
     markSize: 0.66, // paperclips, as a fraction of the shorter stage side
     across: 56, // tiles across the paperclips: higher is finer
     minTile: 6, // smallest tile, in px
     gap: 0.14, // gap between tiles, as a share of a tile
-    line: "#f0f0f0", // colour of the gaps; the tiles themselves are white
-    spark: 0.03, // share of tiles that blink now and then
+    line: "#fff", // colour of the gaps: white, so the stage reads as plain white
+    spark: 0.03, // share of the mark's own tiles that blink once it is grown
     seeds: 5, // places along the paperclips where growth starts
     source: 1800, // px the SVG is rasterised at, once
 
@@ -460,7 +460,9 @@
   /* Tiles that light up red at random, each on its own slow cycle. */
   function blinkers(n) {
     var list = [];
-    for (var i = 0; i < n; i++) if (rnd(i, 8) < CFG.spark) list.push(i);
+    for (var i = 0; i < n; i++) {
+      if (onMark[i] && rnd(i, 8) < CFG.spark) list.push(i);
+    }
     sIdx = new Int32Array(list);
     sT = new Float32Array(list.length);
     sP = new Float32Array(list.length);
