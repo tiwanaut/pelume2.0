@@ -1,10 +1,12 @@
-/* Pelume home: red tiles grow into the shape of the paperclips, like pieces
-   being placed in a game, on a plain white stage; a few of the mark's own
-   tiles blink once it is fully grown. Scrolling drains the red back out, then
-   grows it again, then releases the sticky stage into the plain page below.
+/* Pelume home: a white mosaic of square tiles. Red tiles grow out of it along
+   the shape of the paperclips, like pieces being placed in a game, while a few
+   of the mark's own tiles blink once it is grown. Scrolling drains the red
+   back out — fading in the statement, centred, in its place — then grows the
+   paperclips again, fading the statement back out. The scroll loops, so there
+   is no end in either direction.
 
    Progressive enhancement. Without scripting, or with reduced motion, the page
-   is the paperclip mark. */
+   is the paperclip mark and the statement, stacked and always visible. */
 
 (function () {
   "use strict";
@@ -21,6 +23,7 @@
   var track = shell.querySelector("[data-track]");
   var stage = shell.querySelector("[data-stage]");
   var img = shell.querySelector("[data-mark] img");
+  var statement = shell.querySelector("[data-statement]");
   if (!scroller || !track || !stage || !img) return;
 
   /* ------------------------------------------------------------ settings */
@@ -29,7 +32,7 @@
     intro: 5600, // ms for the paperclips to grow the first time
     delay: 600, // ms of empty mosaic before anything grows
     screens: 3, // one pass of the sequence, in stage heights
-    loop: false, // run the sequence once, then release into the page below
+    loop: true, // keep scrolling round instead of stopping at the end
     passes: 5, // passes held in the scroll track when looping
     markSize: 0.66, // paperclips, as a fraction of the shorter stage side
     across: 56, // tiles across the paperclips: higher is finer
@@ -571,6 +574,7 @@
 
     var k = clamp((now - t0) / CFG.intro, 0, 1);
     var d = Math.max(1 - soft(k), scrollD);
+    if (statement) statement.style.opacity = d;
     render(now / 1000, 1 - d);
 
     requestAnimationFrame(loop);
