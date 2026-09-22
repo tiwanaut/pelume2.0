@@ -1,4 +1,37 @@
-/* Pelume: one page. A tall track scrolls past a stage that stays put. */
+/* Pelume: a tall track scrolls past a stage that stays put, then releases
+   into a plain page carrying the mission statement. */
+
+@font-face {
+  font-family: "ID Grotesk";
+  src: url("IDGrotesk-Book-BF652cb1b45dae8.ttf") format("truetype");
+  font-weight: 350;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ID Grotesk";
+  src: url("IDGrotesk-Regular-BF652cb1b4787d7.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ID Grotesk";
+  src: url("IDGrotesk-Medium-BF652cb1b4765e1.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ID Grotesk";
+  src: url("IDGrotesk-Semibold-BF652cb1b467d9d.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   color-scheme: light;
@@ -7,7 +40,7 @@
   --ink: #000;
   --dim: rgba(0, 0, 0, 0.13);
 
-  --sans: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  --sans: "ID Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
 
   --pad: clamp(32px, 4vw, 56px);
@@ -149,6 +182,69 @@ body {
 
 .word {
   color: var(--dim);
+}
+
+/* ---------- About: the plain page the track releases into on scroll ---------- */
+
+.about {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--paper);
+  padding: clamp(48px, 12vh, 140px) var(--pad);
+}
+
+.about-copy {
+  max-width: 34em;
+  font-weight: 350;
+  font-size: clamp(1.05rem, 0.85rem + 0.6vw, 1.3rem);
+  line-height: 1.6;
+  letter-spacing: -0.008em;
+}
+
+.about-copy p {
+  margin: 0 0 1.3em;
+}
+
+.about-copy p:last-child {
+  margin-bottom: 0;
+}
+
+.about-copy a {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--dim);
+  text-underline-offset: 0.15em;
+}
+
+.about-copy a:hover {
+  text-decoration-color: currentColor;
+}
+
+.about-mark {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(56px, 10vh, 120px);
+  opacity: 0.45;
+}
+
+.about-mark img {
+  display: block;
+  width: 30px;
+  height: 30px;
+}
+
+.legal {
+  padding: 0 var(--pad) clamp(32px, 6vh, 56px);
+  text-align: center;
+}
+
+.legal p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- Phone: the window scrolls instead of the inner region ---------- */
