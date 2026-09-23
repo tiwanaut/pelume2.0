@@ -1,5 +1,5 @@
 /* Pelume: a plain header, a hero with the paperclips cropped into the corner,
-   an About section, and a legal line. Nothing scrolls or animates itself. */
+   and a legal line. One screen; nothing scrolls or animates itself. */
 
 @font-face {
   font-family: "ID Grotesk";
@@ -45,6 +45,12 @@
   --sans: "ID Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
 
+  /* Jengah is a paid display font (Gracetypestudio); there's no licensed
+     file for it yet, so the wordmark falls back to ID Grotesk. Add a
+     @font-face for Jengah above and swap it in here once the file is in
+     the repo. */
+  --brand: var(--sans);
+
   --pad: clamp(24px, 5vw, 96px);
 }
 
@@ -56,7 +62,15 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+html,
 body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   margin: 0;
   background: var(--paper);
   color: var(--ink);
@@ -97,6 +111,7 @@ a {
 /* ------------------------------------------------------------------- nav */
 
 .nav {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: clamp(16px, 3vw, 40px);
@@ -106,8 +121,9 @@ a {
 
 .brand {
   margin-right: auto;
+  font-family: var(--brand);
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: 1.3rem;
   text-transform: uppercase;
   letter-spacing: 0;
   color: var(--ink);
@@ -140,8 +156,8 @@ a {
 .hero {
   position: relative;
   overflow: hidden;
-  min-height: 88vh;
-  padding: clamp(56px, 12vh, 140px) var(--pad) 0;
+  flex: 1 1 auto;
+  padding: clamp(40px, 8vh, 96px) var(--pad) 0;
 }
 
 .hero-copy {
@@ -172,9 +188,9 @@ a {
 
 .hero-mark {
   position: absolute;
-  right: clamp(-40px, -3vw, 0px);
-  bottom: -18vw;
-  width: clamp(320px, 46vw, 760px);
+  right: clamp(-32px, -3vw, 0px);
+  bottom: -12vw;
+  width: clamp(280px, 40vw, 620px);
   aspect-ratio: 1 / 1;
   pointer-events: none;
 }
@@ -199,46 +215,17 @@ a {
   display: block;
 }
 
-/* --------------------------------------------------------------- about */
-
-.about {
-  padding: clamp(64px, 12vh, 120px) var(--pad);
-  border-top: 1px solid var(--line);
-}
-
-.about p {
-  max-width: 34em;
-  margin: 0 0 1.2em;
-  font-weight: 350;
-  font-size: clamp(1.05rem, 0.9rem + 0.4vw, 1.2rem);
-  line-height: 1.6;
-}
-
-.about p:last-child {
-  margin-bottom: 0;
-}
-
-.about a {
-  font-weight: 500;
-  text-decoration: underline;
-  text-decoration-color: var(--line);
-  text-underline-offset: 0.15em;
-}
-
-.about a:hover {
-  text-decoration-color: currentColor;
-}
-
 /* --------------------------------------------------------------- legal */
 
 .legal {
-  padding: 20px var(--pad) 32px;
-  border-top: 1px solid var(--line);
+  flex: 0 0 auto;
+  padding: 16px var(--pad) 24px;
 }
 
 .legal p {
   margin: 0;
-  font-size: 0.85rem;
+  max-width: 34em;
+  font-size: 0.8rem;
   color: var(--grey);
 }
 
