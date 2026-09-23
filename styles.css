@@ -54,8 +54,6 @@
   --sans: "ID Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
 
-  /* The wordmark's own face; falls back to ID Grotesk if it fails to load. */
-  --brand: "Jengah", var(--sans);
 
   --pad: clamp(24px, 5vw, 96px);
 }
@@ -133,8 +131,8 @@ a {
 
 .brand img {
   display: block;
-  width: 34px;
-  height: 34px;
+  width: 48px;
+  height: 48px;
 }
 
 .nav-links {
