@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>Pelume</title>
-<meta name="description" content="Pelume is building the marketplaces shaping the future of how we live and work.">
+<title>Pelume — The Marketplace Company</title>
+<meta name="description" content="Pelume is building the marketplaces shaping the future of how we live, play, and work.">
 <meta property="og:title" content="Pelume">
-<meta property="og:description" content="Pelume is building the marketplaces shaping the future of how we live and work.">
+<meta property="og:description" content="Pelume is building the marketplaces shaping the future of how we live, play, and work.">
 <meta property="og:url" content="https://pelume.com">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="paperclips.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -19,32 +20,38 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="shell" data-scene>
 
-    <div class="scroll">
-      <div class="track" data-track>
-        <div class="stage" data-stage>
-          <main class="hero">
-            <div class="mark" data-mark>
-              <img src="paperclips.svg" width="160" height="160" alt="Pelume: three linked paperclips" fetchpriority="high">
-            </div>
-            <p class="statement" data-statement>
-              At Pelume, we're building the marketplaces shaping the future of how we live and work.
-              <br><br>
-              Our mission is simple: to leverage new technologies and build the products that drive the human-human transactions that have been, still are, and will be incredibly integral to how we live and work.
-              <br><br>
-              Got questions? <a href="mailto:hello@pelume.com">Reach out</a>.
-            </p>
-          </main>
-        </div>
-      </div>
+  <header class="nav">
+    <div class="brand">Pelume</div>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#about">About</a>
+      <a href="#">Blog</a>
+      <a href="mailto:hello@pelume.com">Contact Us</a>
+    </nav>
+    <a class="btn" href="#about">Learn More <span aria-hidden="true">→</span></a>
+  </header>
+
+  <main class="hero">
+    <div class="hero-copy">
+      <h1>The Marketplace Company</h1>
+      <p>We're building the marketplaces shaping the future of how we live, play, and work.</p>
+      <a class="btn" href="#about">Learn More <span aria-hidden="true">→</span></a>
     </div>
 
-    <footer class="legal">
-      <p>Pelume Technologies Limited &middot; Company No. 17000375</p>
-    </footer>
+    <div class="hero-mark" data-mark aria-hidden="true">
+      <img src="paperclips.svg" width="160" height="160" alt="">
+    </div>
+  </main>
 
-  </div>
+  <section id="about" class="about">
+    <p>Our mission is simple: to leverage new technologies and build the products that drive the human-human transactions that have been, still are, and will be incredibly integral to how we live and work.</p>
+    <p>Got questions? <a href="mailto:hello@pelume.com">Reach out</a>.</p>
+  </section>
+
+  <footer class="legal">
+    <p>Pelume Technologies Limited &middot; Company No. 17000375</p>
+  </footer>
+
   <script src="stage.js"></script>
 </body>
 </html>
