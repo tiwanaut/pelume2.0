@@ -1,4 +1,5 @@
-/* Pelume: one page. A tall track scrolls past a stage that stays put. */
+/* Pelume: a plain header, a hero with the paperclips cropped into the corner,
+   an About section, and a legal line. Nothing scrolls or animates itself. */
 
 @font-face {
   font-family: "ID Grotesk";
@@ -36,13 +37,15 @@
   color-scheme: light;
 
   --paper: #ffffff;
-  --ink: #000;
-  --dim: rgba(0, 0, 0, 0.13);
+  --ink: #000000;
+  --grey: #6b6b6b;
+  --line: rgba(0, 0, 0, 0.08);
+  --red: #ee2828; /* the paperclip's own colour, averaged from its fills */
 
   --sans: "ID Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
 
-  --pad: clamp(32px, 4vw, 56px);
+  --pad: clamp(24px, 5vw, 96px);
 }
 
 * {
@@ -55,53 +58,140 @@ html {
 
 body {
   margin: 0;
-  min-height: 100dvh;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: clamp(16px, 0.25vw + 15.2px, 17.5px);
   font-weight: 400;
-  line-height: 1.7;
+  line-height: 1.6;
   letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---------- Shell: one scrolling region filling the window ---------- */
+a {
+  color: inherit;
+}
 
-.shell {
+/* ---------------------------------------------------------------- button */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  background: var(--red);
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 0.7em 1.2em;
+  border-radius: 999px;
+  transition: opacity 0.15s ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  opacity: 0.88;
+}
+
+/* ------------------------------------------------------------------- nav */
+
+.nav {
   display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  overflow: hidden;
+  align-items: center;
+  gap: clamp(16px, 3vw, 40px);
+  padding: 20px var(--pad);
+  border-bottom: 1px solid var(--line);
 }
 
-.scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+.brand {
+  margin-right: auto;
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: var(--ink);
 }
 
-/* ---------- Plain layout (no scripting, or reduced motion) ---------- */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 32px);
+}
+
+.nav-links a {
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.nav-links a:hover {
+  opacity: 0.7;
+}
+
+@media (max-width: 640px) {
+  .nav-links {
+    display: none;
+  }
+}
+
+/* ----------------------------------------------------------------- hero */
 
 .hero {
-  min-height: 100%;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: clamp(24px, 6vh, 64px);
-  padding: clamp(32px, 8vh, 96px) var(--pad);
+  position: relative;
+  overflow: hidden;
+  min-height: 88vh;
+  padding: clamp(56px, 12vh, 140px) var(--pad) 0;
 }
 
-.mark {
+.hero-copy {
   position: relative;
-  width: clamp(160px, 26vw, 330px);
-  aspect-ratio: 1;
+  z-index: 1;
+  max-width: 40em;
+}
+
+.hero-copy h1 {
+  margin: 0;
+  font-weight: 600;
+  font-size: clamp(2.6rem, 1.6rem + 5vw, 5.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.hero-copy p {
+  margin: clamp(20px, 3vh, 32px) 0 0;
+  max-width: 30em;
+  color: var(--grey);
+  font-size: clamp(1.05rem, 0.9rem + 0.6vw, 1.35rem);
+  line-height: 1.5;
+}
+
+.hero-copy .btn {
+  margin-top: clamp(24px, 4vh, 36px);
+}
+
+.hero-mark {
+  position: absolute;
+  right: clamp(-40px, -3vw, 0px);
+  bottom: -18vw;
+  width: clamp(320px, 46vw, 760px);
+  aspect-ratio: 1 / 1;
+  pointer-events: none;
+}
+
+.hero-mark img {
+  width: 100%;
+  height: 100%;
   display: block;
 }
 
-.mark img {
+/* Once the canvas is live, it draws the mark; the <img> stays for markup
+   only and is hidden behind it. */
+.hero-mark.is-live img {
+  visibility: hidden;
+}
+
+.hero-mark canvas {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -109,134 +199,47 @@ body {
   display: block;
 }
 
-.statement {
-  max-width: 34em;
-  margin: 0;
-  text-align: center;
-  font-size: clamp(1.05rem, 0.8rem + 0.7vw, 1.35rem);
-  font-weight: 350;
-  line-height: 1.55;
-  letter-spacing: -0.01em;
+/* --------------------------------------------------------------- about */
+
+.about {
+  padding: clamp(64px, 12vh, 120px) var(--pad);
+  border-top: 1px solid var(--line);
 }
 
-.statement a {
-  color: inherit;
+.about p {
+  max-width: 34em;
+  margin: 0 0 1.2em;
+  font-weight: 350;
+  font-size: clamp(1.05rem, 0.9rem + 0.4vw, 1.2rem);
+  line-height: 1.6;
+}
+
+.about p:last-child {
+  margin-bottom: 0;
+}
+
+.about a {
   font-weight: 500;
   text-decoration: underline;
-  text-decoration-color: var(--dim);
+  text-decoration-color: var(--line);
   text-underline-offset: 0.15em;
 }
 
-.statement a:hover {
+.about a:hover {
   text-decoration-color: currentColor;
 }
 
-/* ---------- Scene ----------
-   stage.js adds .is-scene. The canvas paints the pixelated paperclips; the
-   statement sits over it, centred, and fades in as the paperclips drain out
-   on scroll, then fades out again as they grow back. */
-
-.is-scene .scroll {
-  scrollbar-width: none;
-}
-
-.is-scene .scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.is-scene .track {
-  position: relative;
-}
-
-.is-scene .stage {
-  position: sticky;
-  top: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
-.is-scene .hero {
-  position: absolute;
-  inset: 0;
-  min-height: 0;
-  padding: 0;
-  display: block;
-}
-
-/* The <img> stays in the page for its alt text; the canvas draws the mark. */
-.is-scene .mark {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  pointer-events: none;
-}
-
-.stage canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.is-scene .statement {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(calc(100% - 2 * var(--pad)), 34em);
-  transform: translate(-50%, -50%);
-  font-size: clamp(1.15rem, 0.85rem + 1vw, 1.7rem);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.is-scene .statement a {
-  pointer-events: auto;
-}
-
-/* ---------- Legal: a small fixed line, always visible, never scrolls ---------- */
+/* --------------------------------------------------------------- legal */
 
 .legal {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 5;
-  padding: clamp(14px, 3vh, 22px) var(--pad);
-  text-align: center;
+  padding: 20px var(--pad) 32px;
+  border-top: 1px solid var(--line);
 }
 
 .legal p {
   margin: 0;
-  font-size: 0.8rem;
-  color: var(--ink);
-}
-
-/* ---------- Phone: the window scrolls instead of the inner region ---------- */
-
-@media (max-width: 720px) {
-  .shell {
-    height: auto;
-    min-height: 100dvh;
-    overflow: visible;
-  }
-
-  .scroll {
-    flex: 1 0 auto;
-    display: flex;
-    flex-direction: column;
-    overflow: visible;
-  }
-
-  .hero {
-    flex: 1;
-  }
-
-  .is-scene .stage {
-    height: 100svh;
-  }
+  font-size: 0.85rem;
+  color: var(--grey);
 }
 
 @media (prefers-reduced-motion: reduce) {
