@@ -229,14 +229,14 @@ a {
   bottom: 20px;
   z-index: 1;
   margin: 0;
-  max-width: 26em;
   font-size: 0.8rem;
-  color: var(--grey);
+  color: #000000;
+  white-space: nowrap;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    animation: none !important;
+@media (max-width: 640px) {
+  .legal {
+    right: var(--pad);
+    white-space: normal;
   }
 }
