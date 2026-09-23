@@ -126,13 +126,15 @@ a {
 }
 
 .brand {
+  display: block;
   margin-right: auto;
-  font-family: var(--brand);
-  font-weight: 600;
-  font-size: 1.3rem;
-  text-transform: uppercase;
-  letter-spacing: 0;
-  color: var(--ink);
+  line-height: 0;
+}
+
+.brand img {
+  display: block;
+  width: 34px;
+  height: 34px;
 }
 
 .nav-links {
