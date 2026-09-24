@@ -220,26 +220,3 @@ a {
   height: 100%;
   display: block;
 }
-
-/* --------------------------------------------------------------- legal */
-
-.legal {
-  position: absolute;
-  left: var(--pad);
-  right: calc(var(--pad) + clamp(280px, 40vw, 620px));
-  bottom: 20px;
-  z-index: 1;
-  margin: 0;
-  max-width: none;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  color: #000000;
-  white-space: normal;
-}
-
-@media (max-width: 640px) {
-  .legal {
-    right: var(--pad);
-    bottom: 16px;
-  }
-}
