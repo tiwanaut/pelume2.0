@@ -226,18 +226,20 @@ a {
 .legal {
   position: absolute;
   left: var(--pad);
+  right: calc(var(--pad) + clamp(280px, 40vw, 620px));
   bottom: 20px;
   z-index: 1;
   margin: 0;
+  max-width: none;
   font-size: 0.8rem;
+  line-height: 1.5;
   color: #000000;
-  white-space: nowrap;
+  white-space: normal;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 640px) {
   .legal {
     right: var(--pad);
-    max-width: 54em;
-    white-space: normal;
+    bottom: 16px;
   }
 }
