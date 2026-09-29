@@ -2,23 +2,29 @@
   additions.css
   Loaded after styles.css on every page. Uses the tokens from styles.css
   (--sans, --grey, --line, --pad, --red, --paper).
-  Contains: hero body font (Inter), footer, About page, Contact page.
+  Contains: hero body font (Hanken Grotesk), footer, About page, Contact page.
 */
 
 :root {
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Hero body text in Inter. The h1 and .btn keep ID Grotesk from styles.css. */
+/* Hero body text in Hanken Grotesk. The h1 and .btn keep ID Grotesk from styles.css. */
 main.hero .hero-copy p {
   font-family: var(--font-body);
   font-weight: 400;
 }
 
-/* Footer: sits in normal flow under the hero (body is a flex column). */
+/* Footer: sits in normal flow under the hero (body is a flex column).
+   Legal text on the left, registered office on the right. */
 .site-footer {
   flex: 0 0 auto;
-  padding: 20px var(--pad);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px 48px;
+  padding: 16px var(--pad);
   border-top: 1px solid var(--line);
   background: var(--paper);
   color: var(--grey);
@@ -26,8 +32,11 @@ main.hero .hero-copy p {
   font-size: 12px;
   line-height: 1.6;
 }
-.site-footer p { margin: 0 0 4px; max-width: 90ch; }
-.site-footer p:last-child { margin-bottom: 0; }
+.site-footer p { margin: 0; }
+.footer-address { max-width: 48ch; text-align: right; }
+@media (max-width: 720px) {
+  .footer-address { max-width: none; text-align: left; }
+}
 
 /* Mobile: styles.css hides .nav-links below 640px, which would hide About and
    Contact Us. Show them and hide the header button instead. */
@@ -51,7 +60,8 @@ main.hero .hero-copy p {
   letter-spacing: -0.02em;
 }
 .page h2 { margin: 0 0 8px; font-weight: 600; font-size: 1.25rem; line-height: 1.3; }
-.page p { margin: 0; max-width: 65ch; font-family: var(--font-body); }
+.page p { margin: 0; max-width: 65ch; font-family: var(--font-body); font-size: 1.05rem; line-height: 1.65; }
+.page p + p { margin-top: 1.25em; }
 .page .lead { margin-bottom: 40px; font-size: 1.15rem; line-height: 1.5; }
 .page-section { margin-top: 32px; }
 
@@ -59,7 +69,7 @@ main.hero .hero-copy p {
 .contact-form { display: grid; gap: 20px; margin-top: 8px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .field { display: grid; gap: 6px; }
-.field label { font-size: 0.9rem; }
+.field label { font-family: var(--font-body); font-size: 0.9rem; }
 .field input,
 .field textarea {
   width: 100%;
@@ -84,7 +94,7 @@ button.btn {
   font-weight: 500;
   font-size: 0.95rem;
 }
-.form-status { min-height: 1.5em; font-size: 0.95rem; }
+.form-status { min-height: 1.5em; font-family: var(--font-body); font-size: 0.95rem; }
 
 @media (max-width: 560px) {
   .field-row { grid-template-columns: 1fr; }
