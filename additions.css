@@ -100,13 +100,7 @@ button.btn {
   .field-row { grid-template-columns: 1fr; }
 }
 
-/* About page: dark scroll-reveal text. Words start dim and light up as the page scrolls. */
-body.about {
-  --paper: #050505;
-  --ink: #f6f7f2;
-  --grey: #8a8a8a;
-  --line: rgba(255, 255, 255, 0.12);
-}
+/* About page: scroll-reveal text. Words start pale grey and turn black as the page scrolls. */
 .scroll {
   flex: 1 0 auto;
   padding: clamp(32px, 6vh, 72px) var(--pad) 40vh;
