@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="paperclips.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap">
+<link rel="preload" as="font" href="IDGrotesk-Regular-BF652cb1b4787d7.ttf" type="font/ttf" crossorigin>
+<link rel="preload" as="font" href="IDGrotesk-Medium-BF652cb1b4765e1.ttf" type="font/ttf" crossorigin>
+<link rel="preload" as="font" href="Jengah-q2Ozd.otf" type="font/otf" crossorigin>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="additions.css">
+<title>Contact Us — Pelume</title>
+<meta name="description" content="Contact Pelume Technologies Limited.">
+</head>
+<body>
+<header class="nav">
+<a class="brand" href="index.html" aria-label="Pelume home">
+<img src="pelume-icon-letter.svg" width="34" height="34" alt="">
+</a>
+<nav class="nav-links" aria-label="Primary">
+<a href="about.html">About</a>
+<a href="contact.html">Contact Us</a>
+</nav>
+<a class="btn" href="about.html">Learn More <span aria-hidden="true">→</span></a>
+</header>
+<main class="page">
+<h1>Contact Us</h1>
+<p class="lead">Send a message and the team will reply by email.</p>
+<form class="contact-form" id="contact-form" novalidate>
+<div class="field-row">
+<div class="field">
+<label for="first-name">First Name</label>
+<input id="first-name" name="first-name" type="text" autocomplete="given-name" required>
+</div>
+<div class="field">
+<label for="last-name">Last Name</label>
+<input id="last-name" name="last-name" type="text" autocomplete="family-name" required>
+</div>
+</div>
+<div class="field">
+<label for="email">Email</label>
+<input id="email" name="email" type="email" autocomplete="email" required>
+</div>
+<div class="field">
+<label for="message">Message</label>
+<textarea id="message" name="message" rows="6" required></textarea>
+</div>
+<button class="btn" type="submit">Send Message</button>
+<p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+</form>
+</main>
+<footer class="site-footer">
+<p>&copy; 2026 PELUME TECHNOLOGIES LIMITED. All rights reserved.</p>
+<p>PELUME TECHNOLOGIES LIMITED is a company registered in England and Wales under company number 17000375.</p>
+<p>Registered office address: 71-75 Shelton Street, Covent Garden, London, United Kingdom, WC2H 9JQ.</p>
+</footer>
+<script>
+document.getElementById('contact-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var status = document.getElementById('form-status');
+  if (!this.checkValidity()) {
+    status.textContent = 'Please complete all fields with a valid email address.';
+    return;
+  }
+  status.textContent = 'Thank you. Your message has been received.';
+  this.reset();
+});
+</script>
+</body>
+</html>
