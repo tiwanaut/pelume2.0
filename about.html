@@ -16,10 +16,10 @@
 <link rel="preload" as="font" href="Jengah-q2Ozd.otf" type="font/otf" crossorigin>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="additions.css">
-<title>Contact Us — Pelume</title>
-<meta name="description" content="Contact Pelume Technologies Limited.">
+<title>About — Pelume</title>
+<meta name="description" content="Pelume is building the marketplaces shaping the future of how we live, play, and work.">
 </head>
-<body>
+<body class="about">
 <header class="nav">
 <a class="brand" href="index.html" aria-label="Pelume home">
 <img src="pelume-icon-letter.svg" width="34" height="34" alt="">
@@ -30,32 +30,16 @@
 </nav>
 <a class="btn" href="about.html">Learn More <span aria-hidden="true">→</span></a>
 </header>
-<main class="page">
-<h1>Contact Us</h1>
-<p class="lead">Send a message and the team will reply by email.</p>
-<form class="contact-form" id="contact-form" novalidate>
-<div class="field-row">
-<div class="field">
-<label for="first-name">First Name</label>
-<input id="first-name" name="first-name" type="text" autocomplete="given-name" required>
-</div>
-<div class="field">
-<label for="last-name">Last Name</label>
-<input id="last-name" name="last-name" type="text" autocomplete="family-name" required>
-</div>
-</div>
-<div class="field">
-<label for="email">Email</label>
-<input id="email" name="email" type="email" autocomplete="email" required>
-</div>
-<div class="field">
-<label for="message">Message</label>
-<textarea id="message" name="message" rows="6" required></textarea>
-</div>
-<button class="btn" type="submit">Send Message</button>
-<p class="form-status" id="form-status" role="status" aria-live="polite"></p>
-</form>
+<div class="scroll">
+<h1 class="eyebrow">About Pelume</h1>
+<main class="letter">
+<p>We are in an era of new &amp; evolving technologies with exciting capabilities. People are already using both software and hardware more creatively, and we feel there is a need to leverage these technologies to adapt the marketplace to how we will live and work in the future.</p>
+<p>Why marketplaces? The marketplace has been a longstanding and fundamental part of the economy, withstanding notable societal and technological changes. We think the marketplace will continue to have a role in shaping how we live, work, and so much more. We want to be part of building what that looks like with the new technologies available to us.</p>
+<p>We are building a new kind of marketplace company, but our products will still be shaped by the trust, safety, accountability, and high bar for outcomes which have shaped leading marketplaces that have paved the way for a company like ours.</p>
+<p>Our mission is simple: to leverage new technologies and build the products that drive the human-human transactions that have been, still are, and will be incredibly integral to how we live and work.</p>
+<p>We're excited to build for you, and we look forward to what's in store.</p>
 </main>
+</div>
 <footer class="site-footer">
 <div class="footer-legal">
 <p>&copy; 2026 PELUME TECHNOLOGIES LIMITED. All rights reserved.</p>
@@ -64,16 +48,49 @@
 <p class="footer-address">Registered office address: 71-75 Shelton Street, Covent Garden, London, United Kingdom, WC2H 9JQ.</p>
 </footer>
 <script>
-document.getElementById('contact-form').addEventListener('submit', function (e) {
-  e.preventDefault();
-  var status = document.getElementById('form-status');
-  if (!this.checkValidity()) {
-    status.textContent = 'Please complete all fields with a valid email address.';
-    return;
+(function () {
+  var letter = document.querySelector('.letter');
+  if (!letter) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var words = [];
+  letter.querySelectorAll('p').forEach(function (p) {
+    var parts = p.textContent.split(/(\s+)/);
+    p.textContent = '';
+    parts.forEach(function (t) {
+      if (!t) return;
+      if (/^\s+$/.test(t)) { p.appendChild(document.createTextNode(' ')); return; }
+      var span = document.createElement('span');
+      span.className = 'w';
+      span.textContent = t;
+      p.appendChild(span);
+      words.push(span);
+    });
+  });
+
+  var N = words.length, W = 8, DIM = [38, 38, 38], LIT = [246, 247, 242], queued = false;
+
+  function update() {
+    queued = false;
+    var vh = window.innerHeight, r = letter.getBoundingClientRect();
+    var p = (vh * 0.6 - r.top) / r.height;
+    if (window.scrollY + vh >= document.documentElement.scrollHeight - 2) p = 1;
+    p = Math.max(0, Math.min(1, p));
+    var head = p * (N + W);
+    for (var i = 0; i < N; i++) {
+      var b = Math.max(0, Math.min(1, (head - i) / W));
+      words[i].style.color = 'rgb(' +
+        Math.round(DIM[0] + (LIT[0] - DIM[0]) * b) + ',' +
+        Math.round(DIM[1] + (LIT[1] - DIM[1]) * b) + ',' +
+        Math.round(DIM[2] + (LIT[2] - DIM[2]) * b) + ')';
+    }
   }
-  status.textContent = 'Thank you. Your message has been received.';
-  this.reset();
-});
+  function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+
+  window.addEventListener('scroll', queue, { passive: true });
+  window.addEventListener('resize', queue);
+  update();
+})();
 </script>
 </body>
 </html>
